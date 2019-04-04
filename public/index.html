@@ -36,7 +36,17 @@
         	<div class="mask"></div>
         </div>
       </div>
+      <div class="notification-box" id="notification" onclick="viewNotification()">
+        <span class="notification-count">0</span>
+        <div class="notification-bell">
+          <span class="bell-top"></span>
+          <span class="bell-middle"></span>
+          <span class="bell-bottom"></span>
+          <span class="bell-rad"></span>
+        </div>
+      </div>
     </div>
+    
     
     <div class="content"></div>
     
@@ -46,16 +56,20 @@
             <h2>LOGIN</h2>
             <div class="loginInfo">
                 <p>User Name</p>
-                <input type="text" id="username"></input>
+                <input class="loginInput" type="text" id="username" onchange="removeError('#username')"></input>
                 <p>Password</p>
-                <input type="password" id="password"></input>
+                <input class="loginInput" type="password" id="password" onchange="removeError('#password')"></input>
                 <p>Data base</p>
-                <input type="text" id="database"></input>
+                <input class="loginInput" type="text" id="database" onchange="removeError('#database')"></input>
+            </div>
+            <div>
+              <span class="alert" id="alert">Invalid Credentials</span>
             </div>
             <input type="submit" class="button" value="Log in" onclick="dbLogin()">
             <div class="hr"></div>
             <div class="footer">
-              <a href=""> cancel </a>
+              <!--<a href=""> cancel </a>-->
+              <a onclick="cancelLogin()">cancel</a>
             </div>
         </div>
     </section>
@@ -257,7 +271,7 @@
           <button id="showTablesBtn" type="button" onclick="showFileTable()">Display database contents</button>
           <button id="storeDataBtn" type="button" onclick="dbStoreFiles()">Store all files</button>
           <button id="clearDataBtn" type="button" onclick="dbClear()">Clear all data</button>
-          <button id="statusBtn"type="button" onclick="dbStatus()">Display DB stauts</button>
+          <button id="statusBtn"type="button" onclick="dbStatus()">Display DB status</button>
           <button id="execBtn" type="button" onclick="dbExecute()">Execute querty</button>
         </div>
         
@@ -311,7 +325,6 @@
         </section>
       </div>
     </div>
-    
     
       <!-- Leave me at the bottom of body -->
     <script src="/index.js"></script>

@@ -1,12 +1,33 @@
 // Put all onload AJAX calls here, and event listeners
 $(document).ready(function() {
     disableDatabase();
-    //on load login == used as short cut for development, remove after
-    /*$.ajax({
-      type: 'get',
-      url: '/mylogin'
-    });*/
-
+    
+    if (sessionStorage.getItem('user')!=null){
+      let username = sessionStorage.getItem('user');
+      
+      console.log(username);
+      let password = sessionStorage.getItem('pass');
+      console.log(password);
+      let database = sessionStorage.getItem('database');
+      console.log(database);
+      
+      $.ajax({
+        type: 'get',
+        url: '/login',
+        data: {user: username, pass: password, database: database},
+        success: function(data){
+          if (data != true){
+            $('#status').val($('#status').val() + "connection to database has errored: " + data.sqlMessage +  ". Please login to the database again." + "\n");
+            console.log(data);
+            scrollToBottom();
+          } else {
+            enableDatabase();
+            
+          }
+        }
+      });
+    }
+    
     //If the page refreshed because of an uploaded file, restore its revious state
     if (sessionStorage.getItem('statusBar') != null){
       document.querySelector('#status').value = sessionStorage.getItem('statusBar');
@@ -17,7 +38,7 @@ $(document).ready(function() {
     if (sessionStorage.getItem('file')!=null){
       let fileUploaded = sessionStorage.getItem('file');
       if (isNULL(fileUploaded)){
-        $('#status').val($('#status').val() + " No file selected to be uploaded" + "\n");
+        $('#status').val($('#status').val() + "No file selected to be uploaded" + "\n");
         scrollToBottom();
       } else {
         //ajax call to validate the new file
@@ -878,60 +899,95 @@ function closeLogin(){
 }
 
 function dbLogin(){
+  document.getElementById('alert').style.visibility = "hidden";
+  $('#username').removeClass('wrong-entry');
+  $('#password').removeClass('wrong-entry');
+  $('#database').removeClass('wrong-entry');
+  
   let loginForm = document.getElementById("loginForm");
-  loginForm.style.visibility = "hidden";
-  loginForm.style.opacity = "0";
+  
   let username = document.getElementById("username").value;
   let password = document.getElementById("password").value;
   let database = document.getElementById("database").value;
 
   console.log("username: " + username + " password: " + password + " database: " + database);
+  
+  let valid = true;
+  
+  if (username == ""){
+    $('#username').addClass('wrong-entry');
+    valid = false;
+  }
+  if (password == ""){
+    $('#password').addClass('wrong-entry');
+    valid = false;
+  }
+  
+  if (database == ""){
+    $('#database').addClass('wrong-entry');
+    valid = false;
+  }
+  
+  if (valid){
+    $.ajax({
+      type: 'get',
+      url: '/login',
+      data: {user: username, pass: password, database: database},
+      success: function(data){
 
-  $.ajax({
-    type: 'get',
-    url: '/login',
-    data: {user: username, pass: password, database: database},
-    success: function(data){
-
-      if (data != true){
-        //add to status panel "failed to log in to database as [userid]"
-        console.log("failed to connect to database");
-        console.log(data);
-        $('#status').val($('#status').val() + " Failed to connect to database" + "\n");
-        scrollToBottom();
-
-      } else {
-        //add to statis panel "successfully logged in to database as [userid]""
-        console.log("connected");
-        $('#status').val($('#status').val() + " successfully connected to database" + "\n");
-        scrollToBottom();
-        enableDatabase();
+        if (data != true){
+          //add to status panel "failed to log in to database as [userid]"
+          $('#status').val($('#status').val() + "Failed to connect to database: "  + data.sqlMessage + ". Re-enter login credentials." + "\n");
+          scrollToBottom();
+          addNotifcation();
+          //document.getElementById('alert').style.visibility = "visible";
+          closeLogin();
+        } else {
+          //add to statis panel "successfully logged in to database as [userid]""
+          console.log("connected");
+          $('#status').val($('#status').val() + "successfully connected to database" + "\n");
+          scrollToBottom();
+          enableDatabase();
+          //store the data of the login
+          sessionStorage.setItem('user', username);
+          sessionStorage.setItem('pass', password);
+          sessionStorage.setItem('database', database);
+          closeLogin();
+        }
+      },
+      error: function(error){
+        console.log(error);
       }
-    }
-  });
+    });
+  }
+  
 
 }
 
 function dbStoreFiles(){
-  let numFiles = $('#querySelect option').size();
+  let numFiles = $('#querySelect option').length;
 
-  if (numFiles == 0){
-    
+  if (numFiles === 1){
+    updateStatus("No files uploaded to store");
+    addNotifcation();
+  } else {
+    //alert('Store all files');
+    $.ajax({
+      type: 'post',
+      url: '/storeAllFiles',
+      success: function(data){
+        console.log("files stored");
+      },
+      error: function(error){
+        console.log("error storing files");
+        console.log(error);
+      }
+    });
   }
-
-  //alert('Store all files');
-  $.ajax({
-    type: 'post',
-    url: '/storeAllFiles',
-    success: function(data){
-      console.log("files stored");
-    },
-    error: function(error){
-      console.log("error storing files");
-      console.log(error);
-    }
-  });
-
+  
+  $('#status').val($('#status').val() + "Store all files: ");
+  dbStatus();
+  $('#execBtn').prop('disabled', false);
   //showFileTable();
 }
 
@@ -973,7 +1029,12 @@ function dbClear(){
   $('#alarmDB tbody').remove();
   let alarmBase = "<thead><tr><th> Database ALARM Table </th></tr></thead><tbody><tr><td> The contents of the ALAMR table will be displayed here once data is stored in database. </td></tr></tbody>";
   $('#alarmDB').append(alarmBase);
-
+  
+  $('#status').val($('#status').val() + "Clear all data: ");
+  dbStatus();
+  
+  //deactivate the execute button
+  $('#execBtn').prop('disabled', true);
 }
 
 function dbExecute(){
@@ -988,28 +1049,50 @@ function dbExecute(){
     'select COUNT(*) AS NUM_EVENTS from EVENT, FILE where (EVENT.cal_file = FILE.cal_id AND FILE.file_Name = \'' + $('#querySelect option:selected').text() + '\')',
     'select * from FILE left outer join EVENT on FILE.cal_id = EVENT.cal_file'
   ]
+  
+  //query option
   let sel = document.getElementById('query-options');
   let opt = sel.options.selectedIndex;
-  console.log("option selected: " + opt);
-  console.log(queries[opt-1]);
-  $.ajax({
-    type: 'get',
-    data: { query: queries[opt-1] } ,
-    url: '/executeQuery',
-    success: function(data){
-      if (data.length != 0){
-        console.log(data);
-
-        createQueryTable(data);
-      } else {
-        console.log(data);
-      }
-
-    },
-    error: function(error){
-      console.log(error);
+  
+  //file option
+  let fileSelected = document.getElementById('querySelect').options.selectedIndex;
+  
+  let valid = true;
+  if (opt == 0){
+    updateStatus("No query was selected");
+    addNotifcation();
+    valid = false;
+  } else if (fileSelected == 0){
+    if (opt === 2 || opt == 4 || opt == 5){
+      let query = queries[opt-1];
+      let error = "No file was selected for query number " + opt;
+      updateStatus(error);
+      addNotifcation();
+      valid = false;
     }
-  })
+  }
+  if (valid){
+    //console.log(queries[opt-1]);
+    $.ajax({
+      type: 'get',
+      data: { query: queries[opt-1] } ,
+      url: '/executeQuery',
+      success: function(data){
+        if (data.length != 0){
+          //console.log(data);
+          createQueryTable(data);
+        } else {
+          updateStatus("Database is empty. Cannot execute query.");
+          addNotifcation();
+        }
+
+      },
+      error: function(error){
+        console.log(error);
+      }
+    });
+  }
+  
 }
 
 function createQueryTable(data){
@@ -1052,11 +1135,13 @@ function showFileTable(){
     url: '/executeQuery',
     success: function(data){
       if (data.length != 0){
-        console.log(data);
+        //console.log(data);
 
         createFileTable(data);
         showEventTable();
       } else {
+        updateStatus("Database is empty. Nothing to display."); 
+        addNotifcation();
         console.log(data);
       }
 
@@ -1199,8 +1284,8 @@ function dbStatus(){
     url: '/displayDBStatus',
     success: function(data){
       console.log("display data:" + data);
-      $('#status').val($('#status').val() + data + "\n");
       scrollToBottom();
+      //addNotifcation();
     },
     error: function(error){
       console.log(error);
@@ -1242,4 +1327,43 @@ function enableDatabase(){
   $('#clearDataBtn').prop('disabled', false);
   $('#statusBtn').prop('disabled', false);
   $('#execBtn').prop('disabled', false);
+}
+
+function updateStatus(text){
+  $('#status').val($('#status').val() + text + "\n");
+  scrollToBottom();
+}
+
+function addNotifcation(){
+  let el = document.getElementById('notification');
+  //console.log("add notification");
+  document.getElementById('notification').style.visibility = "visible";
+  //let val = $('.notification-box span').val();
+  //console.log(val);
+  //let newVal = val + 1;
+  let count = Number(el.getAttribute('data-count')) || 0;
+  el.setAttribute('data-count', count + 1);
+  //console.log(newVal);
+  $('.notification-box span').html(count+1);
+}
+
+function viewNotification(){
+  let el = document.getElementById('notification');
+  el.style.visibility = "hidden";
+  el.setAttribute('data-count', 0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function removeError(id){
+  $(id).removeClass('wrong-entry');
+  //$('#password').removeClass('wrong-entry');
+  //$('#password').removeClass('wrong-entry');
+}
+
+function cancelLogin(){
+  sessionStorage.removeItem('user');
+  sessionStorage.removeItem('pass');
+  sessionStorage.removeItem('database');
+  closeLogin();
+  
 }

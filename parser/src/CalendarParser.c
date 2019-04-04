@@ -879,7 +879,7 @@ ICalErrorCode writeCalendar(char* fileName, const Calendar* obj){
     return WRITE_ERROR;
   }
 
-  char* str = calloc(1000, sizeof(char));
+  char* str = calloc(10000, sizeof(char));
   char version[15]; //8 char for "VERSION:" and 3 for value and 2 for \r\n
   char prodID[1000];
   char* properties = writeList(obj->properties, &writeProperty);

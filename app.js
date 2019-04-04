@@ -422,7 +422,7 @@ app.get('/displayDBStatus', function(req, res){
               } else {
                 alarmCount = result[0].numAlarms;
                 let status = "Database has " + fileCount + " files, " + eventCount + " events, and " + alarmCount + " alarms";
-                console.log(status);
+                //console.log(status);
                 res.send(status);
               }
             });
