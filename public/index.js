@@ -2,11 +2,11 @@
 $(document).ready(function() {
     disableDatabase();
     //on load login == used as short cut for development, remove after
-    $.ajax({
+    /*$.ajax({
       type: 'get',
       url: '/mylogin'
-    });
-    
+    });*/
+
     //If the page refreshed because of an uploaded file, restore its revious state
     if (sessionStorage.getItem('statusBar') != null){
       document.querySelector('#status').value = sessionStorage.getItem('statusBar');
@@ -58,7 +58,7 @@ $(document).ready(function() {
     removeAllOptions('querySelect');
     //get list of file names and update the drop down menus
     let files = [];
-  
+
     $.ajax({
       type:'get',
       url: '/uploads',
@@ -884,22 +884,22 @@ function dbLogin(){
   let username = document.getElementById("username").value;
   let password = document.getElementById("password").value;
   let database = document.getElementById("database").value;
-   
+
   console.log("username: " + username + " password: " + password + " database: " + database);
-  
+
   $.ajax({
     type: 'get',
     url: '/login',
     data: {user: username, pass: password, database: database},
     success: function(data){
-      
+
       if (data != true){
         //add to status panel "failed to log in to database as [userid]"
         console.log("failed to connect to database");
         console.log(data);
         $('#status').val($('#status').val() + " Failed to connect to database" + "\n");
         scrollToBottom();
-        
+
       } else {
         //add to statis panel "successfully logged in to database as [userid]""
         console.log("connected");
@@ -909,10 +909,16 @@ function dbLogin(){
       }
     }
   });
-  
+
 }
 
 function dbStoreFiles(){
+  let numFiles = $('#querySelect option').size();
+
+  if (numFiles == 0){
+    
+  }
+
   //alert('Store all files');
   $.ajax({
     type: 'post',
@@ -925,7 +931,7 @@ function dbStoreFiles(){
       console.log(error);
     }
   });
-  
+
   //showFileTable();
 }
 
@@ -941,39 +947,39 @@ function dbClear(){
       console.log(error);
     }
   });
-  
+
   //update the html table
   $('#dbTable thead').remove();
   $('#dbTable tbody').remove();
-  
+
   //add the basic table back
   let base = "<thead><tr><th> Database Query Table </th></tr></thead><tbody><tr><td> The output of the queries will be placed in this table. </td></tr></tbody>";
   $('#dbTable').append(base);
-  
+
   //clear the file table HTML
   $('#fileDB thead').remove();
   $('#fileDB tbody').remove();
   let fileBase = "<thead><tr><th> Database FILE Table </th></tr></thead><tbody><tr><td> The contents of the FILE table will be displayed here once data is stored in database. </td></tr></tbody>";
   $('#fileDB').append(fileBase);
-  
+
   //clear the event table HTML
   $('#eventDB thead').remove();
   $('#eventDB tbody').remove();
   let eventBase = "<thead><tr><th> Database EVENT Table </th></tr></thead><tbody><tr><td> The contents of the EVENT table will be displayed here once data is stored in database. </td></tr></tbody>";
   $('#eventDB').append(eventBase);
-  
+
   //clear the alarm table HTML
   $('#alarmDB thead').remove();
   $('#alarmDB tbody').remove();
   let alarmBase = "<thead><tr><th> Database ALARM Table </th></tr></thead><tbody><tr><td> The contents of the ALAMR table will be displayed here once data is stored in database. </td></tr></tbody>";
   $('#alarmDB').append(alarmBase);
-  
+
 }
 
 function dbExecute(){
   //alert('Execute');
   //current date - used for query 4
-  
+
   let queries = [
     'select * from EVENT order by start_time',
     'select * from EVENT, FILE where (EVENT.cal_file = FILE.cal_id AND FILE.file_Name = \'' + $('#querySelect option:selected').text() + '\')',
@@ -993,12 +999,12 @@ function dbExecute(){
     success: function(data){
       if (data.length != 0){
         console.log(data);
-        
+
         createQueryTable(data);
       } else {
         console.log(data);
       }
-      
+
     },
     error: function(error){
       console.log(error);
@@ -1009,20 +1015,20 @@ function dbExecute(){
 function createQueryTable(data){
   $('#dbTable thead').remove();
   $('#dbTable tbody').remove();
-  
+
   /* creating the head of the table */
   let header = "";
   header = "<thead><tr>";
-  
+
   let keys = Object.keys(data[0]);
   for (let i = 0; i < keys.length; i++){
     header = header + "<th>" + keys[i] + "</th>";
   }
-  
+
   header = header + "</tr></thead>";
-  
+
   $('#dbTable').append(header);
-  
+
   //create the body
   let body = "";
   body = "<tbody><tr>"
@@ -1033,10 +1039,10 @@ function createQueryTable(data){
     }
     body = body + "</tr></tbody>";
   }
-  
+
   $('#dbTable').append(body);
-  
-  
+
+
 }
 
 function showFileTable(){
@@ -1047,13 +1053,13 @@ function showFileTable(){
     success: function(data){
       if (data.length != 0){
         console.log(data);
-        
+
         createFileTable(data);
         showEventTable();
       } else {
         console.log(data);
       }
-      
+
     }
   });
 }
@@ -1066,14 +1072,14 @@ function createFileTable(data){
   /* creating the head of the table */
   let header = "";
   header = "<thead><tr>";
-  
+
   let keys = Object.keys(data[0]);
   for (let i = 0; i < keys.length; i++){
     header = header + "<th>" + keys[i] + "</th>";
   }
-  
+
   header = header + "</tr></thead>";
-  
+
   //$(table).append(header);
   $('#fileDB').append(header);
   //create the body
@@ -1086,7 +1092,7 @@ function createFileTable(data){
     }
     body = body + "</tr></tbody>";
   }
-  
+
   //$(table).append(body);
   $('#fileDB').append(body);
 }
@@ -1116,14 +1122,14 @@ function createEventTable(data){
   /* creating the head of the table */
   let header = "";
   header = "<thead><tr>";
-  
+
   let keys = Object.keys(data[0]);
   for (let i = 0; i < keys.length; i++){
     header = header + "<th>" + keys[i] + "</th>";
   }
-  
+
   header = header + "</tr></thead>";
-  
+
   $('#eventDB').append(header);
   //create the body
   let body = "";
@@ -1135,7 +1141,7 @@ function createEventTable(data){
     }
     body = body + "</tr></tbody>";
   }
-  
+
   $('#eventDB').append(body);
 }
 
@@ -1164,14 +1170,14 @@ function createAlarmTable(data){
   /* creating the head of the table */
   let header = "";
   header = "<thead><tr>";
-  
+
   let keys = Object.keys(data[0]);
   for (let i = 0; i < keys.length; i++){
     header = header + "<th>" + keys[i] + "</th>";
   }
-  
+
   header = header + "</tr></thead>";
-  
+
   $('#alarmDB').append(header);
   //create the body
   let body = "";
@@ -1183,7 +1189,7 @@ function createAlarmTable(data){
     }
     body = body + "</tr></tbody>";
   }
-  
+
   $('#alarmDB').append(body);
 }
 
