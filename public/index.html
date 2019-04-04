@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Calendar Viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="CHANGE ME">
+    <meta name="keywords" content="CHANGE ME">
+    <meta name="author" content="CHANGE ME">
+    <!-- Load jquery, bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <!-- Custom CSS End -->
+
+    <!-- using google font -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,500" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Fira+Mono" rel="stylesheet">
+    <!-- using font awesome 5 -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+</head>
+<body>
+    <!-- contains a bar that stays on the head of the page -->
+    <div class="header-sticky" id="logo">
+      <h2> Calendar Viewer. </h2>
+      <div class="loginBtn">
+        <!--<a class="button" href="#loginID" id="login_DB">Login</a> -->
+        <div class="button" onclick="openLogin()">
+        	<a>
+        		Login
+        		<span class="shift">›</span>
+        	</a>
+        	<div class="mask"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="content"></div>
+    
+    <!--input popup to search login-->
+    <section id="loginForm" class="overlay">
+        <div class="popupDisplay">
+            <h2>LOGIN</h2>
+            <div class="loginInfo">
+                <p>User Name</p>
+                <input type="text" id="username"></input>
+                <p>Password</p>
+                <input type="password" id="password"></input>
+                <p>Data base</p>
+                <input type="text" id="database"></input>
+            </div>
+            <input type="submit" class="button" value="Log in" onclick="dbLogin()">
+            <div class="hr"></div>
+            <div class="footer">
+              <a href=""> cancel </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- status panel -->
+    <div class="container statusPanel" id="stautsPanel">
+      <h2 style="text-align: center;">Status</h2>
+      <textarea onchange="scrollToBottom()" id='status' rows="4" style="width:100%" placeholder="The Status Panel is displayed at the top of the window, and displays the status of various commands (success or various errors). It is not a particularly elegant solution, but it is easy to implement and it simplifies debugging. If the Status Panel contains more than 4 lines, vertical scrolling must be enabled." readonly></textarea>
+      <input type="button" value="Clear" id="clear">
+    </div>
+
+    <!--file log panel -->
+    <div class="container fileLogPanel" id="fileLogPanel">
+      <h2> File Log </h2>
+      <div class="tableView" style="max-height: 250px;">
+        <table id = "fileLogTable">
+          <thead>
+            <tr>
+              <th> File name (click to download) </th>
+              <th> Version </th>
+              <th> Product ID </th>
+              <th> Number of events </th>
+              <th> Number of properties </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Empty Body -->
+          </tbody>
+        </table>
+        <label id="noFiles" visible="true" style="padding:10px 10px 10px 10px">No files</label>
+      </div>
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        select file to upload:
+        <input type="file" name="uploadFile" id="fileToUpload" onclick="saveStatusBar()">
+        <input type="submit" value="Upload file" id="upload">
+        <input type="checkbox" value="promise" id="fileUploadedCheckbox" onchange="saveFile()">
+        Select the checkbox if you pinky promise that you have selected a file to upload.
+      </form>
+    </div>
+
+    <div class="container calendarViewPanel" id="calendarViewPanel" style="padding-bottom:40px">
+      <h2> Calendar View </h2>
+      <div id="dd" style="width:200px;">
+        <!--<p style="font-weight:bold;">file name:</p>-->
+        <select id="dynamic-select" style="width:200px;">
+          <option disabled>Select File to View</option>
+        </select>
+        <input type='button' value="View" id="view">
+      </div>
+      <div class="tableView" style="max-height: 300px;">
+        <table id = "calendarViewTable">
+          <thead>
+            <tr>
+              <th> Event No </th>
+              <th> Start date </th>
+              <th> Start time </th>
+              <th> Summary </th>
+              <th> Props </th>
+              <th> Alarms </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Empty Body -->
+          </tbody>
+        </table>
+      </div>
+      <div id="actions" style="width:200px;">
+        <form>
+          <select id="event-select" style="width:200px;">
+            <option disabled>Select Event</option>
+          </select>
+          <input type="button" value="Extract Optional Properties" id="extract" disabled>
+          <input type="button" value="Show Alarms" id="show-alarms" disabled>
+        </form>
+      </div>
+    </div>
+
+    <div class="container2 createCalendar">
+      <div class="wrapper">
+        <ul class="steps">
+          <li class="is-active">Step 1</li>
+          <li>Step 2</li>
+        </ul>
+        <form class="form-wrapper">
+          <fieldset class="section is-active">
+            <h3>Create Calendar</h3>
+            <input type="text" name="file name" id="filename" placeholder="File name">
+            <input type="number" name="version" id="version" placeholder="Version" min="1">
+            <input type="text" name="product ID" id="product-id" placeholder="Product ID">
+            <h3 style="font-size:12px; opacity: 0.5; text-transform:lowercase">- Or add an event to an existing file -</h3>
+            <div>
+              <label class="switch" for="existingFileToggle">
+                <input type="checkbox" id="existingFileToggle" onchange="toggleInput()">
+                <div class="slider round"></div>
+              </label>
+            </div>
+            <div>
+              <select id="file-select" disabled>
+                <option disabled>Select File</option>
+              </select>
+            </div>
+            <div class="button" id="next">Next</div>
+          </fieldset>
+          <fieldset class="section">
+            <h3>Add Event</h3>
+            <input type="text" name="UID" id="event-uid" placeholder="UID" style="width:40%;">
+            <div id="startDT">
+              <h4>Start Date:</h4>
+              <div class="date-time">
+                <input id="startDT-date" type="date" class="form">
+              </div>
+              <div class="time">
+                <input id="startDT-hour" type="number" class="time-input" min="0" max="23" placeholder="HH">
+                <input id="startDT-minute" type="number" class="time-input" min="0" max="59" placeholder="MM">
+                <input id="startDT-second" type="number" class="time-input" min="0" max="59" placeholder="SS">
+              </div>
+              <div class="UTC-toggle">
+                <input type="checkbox" id="startDT-isUTC">
+                <label> UTC </label>
+              </div>
+            </div>
+            <div id="creationDT">
+              <h4>Creation Date:</h4>
+              <div class="date-time">
+                <input id="creationDT-date" type="date" class="form">
+              </div>
+              <div class="time">
+                <input id="creationDT-hour" type="number" class="time-input" min="0" max="23" placeholder="HH">
+                <input id="creationDT-minute" type="number" class="time-input" min="0" max="59" placeholder="MM">
+                <input id="creationDT-second" type="number" class="time-input" min="0" max="59" placeholder="SS">
+              </div>
+              <div class="UTC-toggle">
+                <input type="checkbox" id="creationDT-isUTC">
+                <label for="creationDT-isUTC"> UTC </label>
+              </div>
+            </div>
+            <input type="textarea" id="createCal-summary" placeholder="Event Summary (Optional)">
+            <input class="button" type="button" value="Create Calendar" id="createCal">
+          </fieldset>
+          <fieldset class="section">
+            <h3 id="outcome">New calendar will be attempted to be created</h3>
+            <p>See the status panel for more information</p>
+            <div class="button" id="addAnotherCal">Add Another</div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    
+    <!-- database panel -->
+    <div class="container databasePanel">
+      <div>
+        <h2> Database </h2>
+        <p id="dbInstruct">To enable the database UI, you must first login. Enter your database credentials by clicking the login button at the top right corner.</p>
+        <!-- queries -->
+        <div>
+          <select id="query-options" style="margin-bottom:30px;" onchange="displayFileSelect()">
+            <option disabled selected>Select query</option>
+            <option value="1">Display all events sorted by start date</option>
+            <option value="2">Display the events from a specific file</option>
+            <option value="3">Display all events that might conflict with each other</option>
+            <!-- option 4 to 6 are my choice by at least one of them must be related to alarms -->
+            <!--<option value="3">Display all events coming up in the next 30 days from today</option>-->
+            <option value="4">Display the alarms from a specific file</option>
+            <option value="5">Display the number of events from a specific file</option>
+            <option value="6">Display list of all files along with their events</option>
+          </select>
+        </div>
+        
+        <!-- file -->
+        <div>
+          <p>Select File if applicable</p>
+          <select id="querySelect" style="width:200px; margin-bottom:30px;" disabled>
+            <option disabled selected>Select file for query if applicable</option>
+          </select>
+        </div>
+        
+        <!--<textarea class="queryTextarea" rows="4" style="width:100%;"></textarea>-->
+        
+        <!-- database table -->
+        <section class="database">
+          <div class="tableView">
+            <table id="dbTable">
+              <thead>
+                <tr>
+                  <th> Database Query Table </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td> The output of the queries will be placed in this table. </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- buttons -->
+        <div class="databaseButtons">
+          <button id="showTablesBtn" type="button" onclick="showFileTable()">Display database contents</button>
+          <button id="storeDataBtn" type="button" onclick="dbStoreFiles()">Store all files</button>
+          <button id="clearDataBtn" type="button" onclick="dbClear()">Clear all data</button>
+          <button id="statusBtn"type="button" onclick="dbStatus()">Display DB stauts</button>
+          <button id="execBtn" type="button" onclick="dbExecute()">Execute querty</button>
+        </div>
+        
+        
+        <!-- display the contents of the database -->
+        <section class="database" >
+          <h2 style="padding-bottom: 5px;margin-bottom: 5px;"> Database content </h2>
+          <p> Populated if files are stored in the database </p>
+          <div class="tableView">
+            <table id="fileDB">
+              <thead>
+                <tr>
+                  <th> Database FILE Table </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td> The contents of the FILE table will be displayed here once data is stored in database </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tableView" style="margin-top:30px;">
+            <table id="eventDB">
+              <thead>
+                <tr>
+                  <th> Database EVENT Table </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td> The contents of the EVENT table will be displayed here once data is stored in database </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tableView" style="margin-top:30px;">
+            <table id="alarmDB">
+              <thead>
+                <tr>
+                  <th> Database ALARM Table </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td> The contents of the ALARM table will be displayed here once data is stored in database </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+    
+    
+      <!-- Leave me at the bottom of body -->
+    <script src="/index.js"></script>
+</body>
+</html>
