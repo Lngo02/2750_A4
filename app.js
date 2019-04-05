@@ -67,7 +67,7 @@ app.post('/upload', function(req, res) {
   }
 
   let uploadFile = req.files.uploadFile;
- 
+
   // Use the mv() method to place the file somewhere on your server
   uploadFile.mv('uploads/' + uploadFile.name, function(err) {
     if(err) {
@@ -105,13 +105,13 @@ app.get('/uploads', function(req, res){
   validFiles=[];
   calendars=[];
   let files = getFiles('./uploads');
-  
+
   for (let i = 0; i < files.length; i++){
     let currentFile = __dirname+"/uploads/" + files[i];
     let jsonStr = parserLib.icsToJSON(currentFile);
     if (jsonStr!="{}"){
       calendars.push(JSON.parse(jsonStr));
-      validFiles.push(files[i]); 
+      validFiles.push(files[i]);
     }
   }
   res.send(validFiles);
@@ -129,10 +129,10 @@ app.get('/initFileLog', function(req, res){
     let jsonStr = parserLib.icsToJSON(currentFile);
     if (jsonStr!="{}"){
       let jsonObj = JSON.parse(jsonStr);
-      fileLog.push(jsonObj); 
+      fileLog.push(jsonObj);
     }
-    //let jsonStr = '{"filename":' + currentFile + 
-    
+    //let jsonStr = '{"filename":' + currentFile +
+
     //console.log(currentFile);
   }
   res.send(fileLog);
@@ -178,7 +178,7 @@ app.get('/uploadNewCalendar', function(req, res) {
   let summary = req.query.summary;
   let path = "\"" + __dirname+"/uploads/" + file + "\"" ;
   let params = path + version + prodID + uid + startDT + creationDT;
-  
+
   let outcome = parserLib.newICSFile(path, version, prodID, uid, startDT, creationDT,summary);
   res.send(outcome);
   //res.send(params);
@@ -215,7 +215,7 @@ app.get('/mylogin', function(req, res){
     password : '1004683',
     database : 'lngo02'
   });
-  
+
   connection.connect();
 });
 
@@ -230,7 +230,7 @@ app.get('/login', function(req, res){
     password : password,
     database : database
   });
-  
+
   connection.connect(function(err){
     if (err){
       res.send(err);
@@ -243,7 +243,7 @@ app.get('/login', function(req, res){
 //Sample endpoint
 app.get('/someendpoint', function(req , res){
   res.send({
-    foo: "bar" 
+    foo: "bar"
   });
 });
 
@@ -258,10 +258,10 @@ app.post('/storeAllFiles', function(req, res){
     createFileTable();
     createEventTable();
     createAlarmTable();
-    
+
     deleteTables();
-    
-    
+
+
     //populate file table
     /*for (let i = 0; i < validFiles.length; i++){
       //console.log("validFiles[i] = " + validFiles[i]);
@@ -331,9 +331,9 @@ app.post('/storeAllFiles', function(req, res){
         });
       }
     });*/
-    
+
     //store data of the events
-    
+
     //populate event and alarm table
     //console.log("insert the events");
     connection.query("SELECT * FROM FILE;", function(error, results, fields){
@@ -387,7 +387,7 @@ app.post('/storeAllFiles', function(req, res){
         }
       }
     });
-    
+
   }
 });
 
@@ -403,13 +403,13 @@ app.get('/displayDBStatus', function(req, res){
     let fileCount = 0;
     let eventCount = 0;
     let alarmCount = 0;
-    
+
     connection.query('SELECT COUNT(*) AS numFiles FROM FILE;', function(err, result){
       if (err){
         console.log(err);
       } else {
         //fileCount = result.length;
-        console.log(result);
+        //console.log(result);
         fileCount = result[0].numFiles;
         connection.query('SELECT COUNT(*) AS numEvents FROM EVENT;', function(err, result){
           if (err){
@@ -430,7 +430,7 @@ app.get('/displayDBStatus', function(req, res){
         });
       }
     });
-    
+
   }
 });
 
@@ -447,7 +447,7 @@ app.get('/executeQuery', function(req, res){
       }
     })
   } else {
-    console.log("not connected to database");
+    //console.log("not connected to database");
   }
 });
 
@@ -470,9 +470,9 @@ function createFileTable(){
 
 function insertFilesIntoDB(){
   let heading = "(file_Name, version, prod_id)";
-  
+
   let values = "";
-  
+
   if(validFiles.length == 1){
     let path = calendars[0].filename;
     let filename = path.substring(path.lastIndexOf('/') + 1);
@@ -487,7 +487,7 @@ function insertFilesIntoDB(){
                       + calendars[i].version  + "', '"
                       + calendars[i].prodID  + "'),";
     }
-    
+
     //for the last one no comma
     let lastElem = validFiles.length-1;
     let path = calendars[lastElem].filename;
@@ -496,7 +496,7 @@ function insertFilesIntoDB(){
                     + calendars[lastElem].version  + "', '"
                     + calendars[lastElem].prodID  + "')";
   }
-  
+
   let table = "INSERT INTO FILE "  + heading + " VALUES " + values + ";";
   return table;
 }
@@ -522,7 +522,7 @@ function createEventTable(){
     + "cal_file INT NOT NULL,"
     + "PRIMARY KEY(event_id),"
     + "FOREIGN KEY(cal_file) REFERENCES FILE(cal_id) ON DELETE CASCADE )";
-  
+
   connection.query(createEventTable, function(err, results, fields){
     if (err){
       console.log(err.message);
@@ -535,7 +535,7 @@ function insertEventIntoDB(ev, optionalProps, fileID){
   let organizer = "NULL";
   let summary = "NULL";
   let props = optionalProps;
-  console.log(props);
+  //console.log(props);
   //console.log(JSON.stringify(props));
   /*if (props != undefined){
     if (props.hasOwnProperty("location")){
@@ -555,22 +555,22 @@ function insertEventIntoDB(ev, optionalProps, fileID){
       //console.log("organizer: " + organizer);
     }
   }
-  
 
-  
+
+
   //console.log("event = " + ev);
-  
+
   if (ev.summary != ""){
     summary = ev.summary;
   }
-  
+
   let startTime = dtToSQL(ev.startDT);
   /*console.log("location: " + location);
   console.log("organizer: " + organizer);
   console.log("summary: " + summary);
   console.log("start date: " + startTime);
   console.log("fileID: " + fileID);*/
-  
+
   let heading = "(summary, start_time, location, organizer, cal_file)";
   let values = "('" + summary + "', '"
                     + startTime + "', '"
@@ -589,7 +589,7 @@ function createAlarmTable(){
       + "event INT NOT NULL,"
       + "PRIMARY KEY(alarm_id),"
       + "FOREIGN KEY(event) REFERENCES EVENT(event_id) ON DELETE CASCADE )";
-    
+
     connection.query(createAlarmTable, function(err, results, fields){
       if (err){
         console.log(err.message);
@@ -620,7 +620,7 @@ function deleteTable(table){
 function dtToSQL(datetime){
   let date = datetime.date;
   let time = datetime.time;
-  
+
   //YYYY-MM-DD HH:MM:SS
   let year = date.substring(0,4);
   let month = date.substring(4,6);
@@ -630,32 +630,32 @@ function dtToSQL(datetime){
   let second = time.substring(4,6);
   let sqlDate = year + "-" + month + "-" + day;
   let sqlTime = hour + ":" + minute + ":" + second;
-  
+
   let sql = sqlDate + " " + sqlTime;
-  
+
   return sql;
-  
+
 }
 
 function deleteTables(){
   deleteTable("FILE");
   deleteTable("EVENT");
   deleteTable("ALARM");
-  
+
   //set all their auto increments to 1
   connection.query("ALTER TABLE FILE AUTO_INCREMENT = 1", function(err, result){
     if (err) {
       console.log(err);
     }
   });
-  
+
   //set all their auto increments to 1
   connection.query("ALTER TABLE EVENT AUTO_INCREMENT = 1", function(err, result){
     if (err) {
       console.log(err);
     }
   });
-  
+
   //set all their auto increments to 1
   connection.query("ALTER TABLE ALARM AUTO_INCREMENT = 1", function(err, result){
     if (err) {
@@ -663,5 +663,3 @@ function deleteTables(){
     }
   });
 }
-
-

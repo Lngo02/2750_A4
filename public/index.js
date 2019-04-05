@@ -1,16 +1,16 @@
 // Put all onload AJAX calls here, and event listeners
 $(document).ready(function() {
     disableDatabase();
-    
+
     if (sessionStorage.getItem('user')!=null){
       let username = sessionStorage.getItem('user');
-      
+
       console.log(username);
       let password = sessionStorage.getItem('pass');
       console.log(password);
       let database = sessionStorage.getItem('database');
       console.log(database);
-      
+
       $.ajax({
         type: 'get',
         url: '/login',
@@ -22,12 +22,12 @@ $(document).ready(function() {
             scrollToBottom();
           } else {
             enableDatabase();
-            
+
           }
         }
       });
     }
-    
+
     //If the page refreshed because of an uploaded file, restore its revious state
     if (sessionStorage.getItem('statusBar') != null){
       document.querySelector('#status').value = sessionStorage.getItem('statusBar');
@@ -903,17 +903,17 @@ function dbLogin(){
   $('#username').removeClass('wrong-entry');
   $('#password').removeClass('wrong-entry');
   $('#database').removeClass('wrong-entry');
-  
+
   let loginForm = document.getElementById("loginForm");
-  
+
   let username = document.getElementById("username").value;
   let password = document.getElementById("password").value;
   let database = document.getElementById("database").value;
 
   console.log("username: " + username + " password: " + password + " database: " + database);
-  
+
   let valid = true;
-  
+
   if (username == ""){
     $('#username').addClass('wrong-entry');
     valid = false;
@@ -922,12 +922,12 @@ function dbLogin(){
     $('#password').addClass('wrong-entry');
     valid = false;
   }
-  
+
   if (database == ""){
     $('#database').addClass('wrong-entry');
     valid = false;
   }
-  
+
   if (valid){
     $.ajax({
       type: 'get',
@@ -960,7 +960,7 @@ function dbLogin(){
       }
     });
   }
-  
+
 
 }
 
@@ -984,7 +984,7 @@ function dbStoreFiles(){
       }
     });
   }
-  
+
   $('#status').val($('#status').val() + "Store all files: ");
   dbStatus();
   $('#execBtn').prop('disabled', false);
@@ -1029,10 +1029,10 @@ function dbClear(){
   $('#alarmDB tbody').remove();
   let alarmBase = "<thead><tr><th> Database ALARM Table </th></tr></thead><tbody><tr><td> The contents of the ALAMR table will be displayed here once data is stored in database. </td></tr></tbody>";
   $('#alarmDB').append(alarmBase);
-  
+
   $('#status').val($('#status').val() + "Clear all data: ");
   dbStatus();
-  
+
   //deactivate the execute button
   $('#execBtn').prop('disabled', true);
 }
@@ -1049,14 +1049,14 @@ function dbExecute(){
     'select COUNT(*) AS NUM_EVENTS from EVENT, FILE where (EVENT.cal_file = FILE.cal_id AND FILE.file_Name = \'' + $('#querySelect option:selected').text() + '\')',
     'select * from FILE left outer join EVENT on FILE.cal_id = EVENT.cal_file'
   ]
-  
+
   //query option
   let sel = document.getElementById('query-options');
   let opt = sel.options.selectedIndex;
-  
+
   //file option
   let fileSelected = document.getElementById('querySelect').options.selectedIndex;
-  
+
   let valid = true;
   if (opt == 0){
     updateStatus("No query was selected");
@@ -1082,17 +1082,16 @@ function dbExecute(){
           //console.log(data);
           createQueryTable(data);
         } else {
-          updateStatus("Database is empty. Cannot execute query.");
+          updateStatus("Execute Query: Nothing to display");
           addNotifcation();
         }
-
       },
       error: function(error){
         console.log(error);
       }
     });
   }
-  
+
 }
 
 function createQueryTable(data){
@@ -1140,7 +1139,7 @@ function showFileTable(){
         createFileTable(data);
         showEventTable();
       } else {
-        updateStatus("Database is empty. Nothing to display."); 
+        updateStatus("Database is empty. Nothing to display.");
         addNotifcation();
         console.log(data);
       }
@@ -1284,6 +1283,7 @@ function dbStatus(){
     url: '/displayDBStatus',
     success: function(data){
       console.log("display data:" + data);
+      updateStatus(data);
       scrollToBottom();
       //addNotifcation();
     },
@@ -1365,5 +1365,5 @@ function cancelLogin(){
   sessionStorage.removeItem('pass');
   sessionStorage.removeItem('database');
   closeLogin();
-  
+
 }
